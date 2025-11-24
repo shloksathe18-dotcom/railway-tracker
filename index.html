@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Tracker - Smart Train Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --gray: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="none"/><path d="M0 50 Q 25 25, 50 50 T 100 50" stroke="rgba(255,255,255,0.05)" stroke-width="2" fill="none"/></svg>');
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1400px;
+            background: var(--white);
+            border-radius: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+            color: var(--white);
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .app-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .app-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .app-header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .view {
+            display: none;
+            padding: 50px;
+            min-height: 600px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .home-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .home-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--white);
+            border: none;
+            padding: 50px 30px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .home-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .home-btn:hover::before {
+            left: 100%;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(30, 64, 175, 0.4);
+        }
+
+        .home-btn:active {
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .home-btn-icon {
+            font-size: 4rem;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+        }
+        .back-btn {
+            background: linear-gradient(135deg, var(--gray) 0%, var(--dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 40px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-btn:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-section {
+            background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-3px);
+        }
+
+        .form-section h2 {
+            color: var(--primary);
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--white);
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(30, 64, 175, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(30, 64, 175, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+        .result-box {
+            margin-top: 40px;
+            padding: 35px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--light) 100%);
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            min-height: 120px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-box.empty {
+            display: none;
+        }
+
+        .result-box h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin: 8px 8px 8px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .status-late {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: var(--danger);
+        }
+
+        .status-ontime {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: var(--success);
+        }
+
+        .status-confirmed {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: var(--primary);
+        }
+
+        .status-waitlist {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: var(--warning);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 18px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            font-weight: 700;
+            color: var(--white);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background: var(--light);
+            transform: scale(1.01);
+            transition: all 0.3s ease;
+        }
+
+        .station-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .station-list li {
+            padding: 18px 25px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--light) 100%);
+            border-radius: 12px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .station-list li:hover {
+            transform: translateX(10px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            border-left-color: var(--primary-light);
+        }
+        @media (max-width: 768px) {
+            .app-header h1 {
+                font-size: 2rem;
+            }
+
+            .app-header p {
+                font-size: 0.95rem;
+            }
+
+            .view {
+                padding: 30px 20px;
+            }
+
+            .home-btn {
+                padding: 40px 25px;
+                font-size: 1.1rem;
+            }
+
+            .home-btn-icon {
+                font-size: 3rem;
+            }
+
+            .form-section {
+                padding: 25px;
+            }
+
+            .form-section h2 {
+                font-size: 1.4rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .data-table {
+                font-size: 0.85rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 12px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .app-container {
+                border-radius: 20px;
+            }
+
+            .app-header {
+                padding: 30px 20px;
+            }
+
+            .app-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .home-buttons {
+                gap: 20px;
+            }
+
+            .result-box {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1>🚂 Railway Tracker</h1>
+            <p>Real-time train tracking • PNR status • Smart journey planning</p>
+        </div>
+        <div id="home-view" class="view active">
+            <div class="home-buttons">
+                <button class="home-btn" onclick="showView('tracking-view')">
+                    <span class="home-btn-icon">📍</span>
+                    <span>Live Tracking</span>
+                </button>
+                <button class="home-btn" onclick="showView('pnr-view')">
+                    <span class="home-btn-icon">🎫</span>
+                    <span>PNR Status</span>
+                </button>
+                <button class="home-btn" onclick="showView('schedule-view')">
+                    <span class="home-btn-icon">⏰</span>
+                    <span>Train Schedule</span>
+                </button>
+                <button class="home-btn" onclick="showView('route-info-view')">
+                    <span class="home-btn-icon">🗺️</span>
+                    <span>Route & Station</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="tracking-view" class="view">
+            <button class="back-btn" onclick="showView('home-view')">← Back to Home</button>
+            
+            <div class="form-grid">
+                <div class="form-section">
+                    <h2>📡 Online Live Tracking</h2>
+                    <form onsubmit="checkLiveStatus(); return false;">
+                        <div class="form-group">
+                            <label for="online-train-no">Train Number</label>
+                            <input type="text" id="online-train-no" placeholder="e.g., 12345" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Track Live Status</button>
+                    </form>
+                    <div id="online-result" class="result-box empty"></div>
+                </div>
+
+                <div class="form-section">
+                    <h2>📶 Offline Tracking</h2>
+                    <form onsubmit="checkOfflineStatus(); return false;">
+                        <div class="form-group">
+                            <label for="offline-train-no">Train Number</label>
+                            <input type="text" id="offline-train-no" placeholder="e.g., 12345" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="last-station">Last Known Station</label>
+                            <input type="text" id="last-station" placeholder="e.g., Delhi" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Check Offline Status</button>
+                    </form>
+                    <div id="offline-result" class="result-box empty"></div>
+                </div>
+            </div>
+        </div>
+        <div id="pnr-view" class="view">
+            <button class="back-btn" onclick="showView('home-view')">← Back to Home</button>
+            
+            <div class="form-section">
+                <h2>🎫 Check PNR Status</h2>
+                <form onsubmit="checkPnrStatus(); return false;">
+                    <div class="form-group">
+                        <label for="pnr-number">PNR Number (10 digits)</label>
+                        <input type="text" id="pnr-number" placeholder="e.g., 1234567890" maxlength="10" pattern="[0-9]{10}" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Check PNR Status</button>
+                </form>
+                <div id="pnr-result" class="result-box empty"></div>
+            </div>
+        </div>
+
+        <div id="schedule-view" class="view">
+            <button class="back-btn" onclick="showView('home-view')">← Back to Home</button>
+            
+            <div class="form-section">
+                <h2>⏰ Train Schedule</h2>
+                <form onsubmit="viewSchedule(); return false;">
+                    <div class="form-group">
+                        <label for="schedule-train-no">Train Number</label>
+                        <input type="text" id="schedule-train-no" placeholder="e.g., 12345" required>
+                    </div>
+                    <button type="submit" class="submit-btn">View Schedule</button>
+                </form>
+                <div id="schedule-result" class="result-box empty"></div>
+            </div>
+        </div>
+
+        <div id="route-info-view" class="view">
+            <button class="back-btn" onclick="showView('home-view')">← Back to Home</button>
+            
+            <div class="form-grid">
+                <div class="form-section">
+                    <h2>🗺️ Train Route</h2>
+                    <form onsubmit="viewRoute(); return false;">
+                        <div class="form-group">
+                            <label for="route-train-no">Train Number</label>
+                            <input type="text" id="route-train-no" placeholder="e.g., 12345" required>
+                        </div>
+                        <button type="submit" class="submit-btn">View Route</button>
+                    </form>
+                    <div id="route-result" class="result-box empty"></div>
+                </div>
+
+                <div class="form-section">
+                    <h2>🚉 Station Information</h2>
+                    <form onsubmit="getStationInfo(); return false;">
+                        <div class="form-group">
+                            <label for="station-code">Station Code</label>
+                            <input type="text" id="station-code" placeholder="e.g., NDLS" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Get Station Info</button>
+                    </form>
+                    <div id="station-result" class="result-box empty"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Trademark -->
+        <div style="background: linear-gradient(135deg, var(--dark) 0%, var(--primary-dark) 100%); color: var(--white); padding: 25px 40px; text-align: center; border-top: 3px solid var(--primary-light);">
+            <p style="font-size: 0.95rem; margin: 0; opacity: 0.9;">
+                Powered by <strong style="font-weight: 700; color: var(--accent); font-size: 1.1rem;">Quarkon Industries</strong>
+            </p>
+            <p style="font-size: 0.85rem; margin-top: 8px; opacity: 0.7;">
+                Developed by Shlok
+            </p>
+        </div>
+    </div>
+    <script>
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const trainNames = ['Rajdhani Express', 'Shatabdi Express', 'Duronto Express', 'Mumbai Express', 'Delhi Express', 'Chennai Express', 'Garib Rath', 'Humsafar Express'];
+        const stations = ['Mumbai Central', 'New Delhi', 'Pune Junction', 'Bangalore City', 'Chennai Central', 'Howrah Junction', 'Hyderabad Deccan', 'Ahmedabad Junction', 'Jaipur', 'Lucknow'];
+        const stationCodes = ['MMCT', 'NDLS', 'PUNE', 'BNC', 'MAS', 'HWH', 'HYB', 'ADI', 'JP', 'LKO'];
+
+        function checkLiveStatus() {
+            const trainNo = document.getElementById('online-train-no').value;
+            const resultDiv = document.getElementById('online-result');
+            
+            const trainName = trainNames[Math.floor(Math.random() * trainNames.length)];
+            const isLate = Math.random() > 0.5;
+            const delayMinutes = Math.floor(Math.random() * 120) + 15;
+            const lastStation = stations[Math.floor(Math.random() * stations.length)];
+            const nextStation = stations[Math.floor(Math.random() * stations.length)];
+            const hour = Math.floor(Math.random() * 12) + 1;
+            const minute = Math.floor(Math.random() * 60);
+            const period = Math.random() > 0.5 ? 'AM' : 'PM';
+            const arrivalTime = `${hour}:${minute.toString().padStart(2, '0')} ${period}`;
+            
+            let html = `<h3>🚂 Live Status for Train ${trainNo}</h3>
+                <p style="font-size: 1.1rem; margin: 15px 0;"><strong>Train Name:</strong> ${trainName}</p>`;
+            
+            if (isLate) {
+                const hours = Math.floor(delayMinutes / 60);
+                const mins = delayMinutes % 60;
+                html += `<span class="status-badge status-late">⚠️ RUNNING LATE by ${hours > 0 ? hours + 'h ' : ''}${mins}m</span>
+                    <p style="margin-top: 20px;"><strong>Last Updated:</strong> ${lastStation}</p>
+                    <p><strong>Expected Arrival at ${nextStation}:</strong> ${arrivalTime}</p>`;
+            } else {
+                html += `<span class="status-badge status-ontime">✅ ON TIME</span>
+                    <p style="margin-top: 20px;"><strong>Current Location:</strong> ${lastStation}</p>
+                    <p><strong>Next Station:</strong> ${nextStation} at ${arrivalTime}</p>`;
+            }
+            
+            html += `<table class="data-table">
+                <tr><th>Parameter</th><th>Value</th></tr>
+                <tr><td>Train Number</td><td>${trainNo}</td></tr>
+                <tr><td>Current Speed</td><td>${Math.floor(Math.random() * 60) + 40} km/h</td></tr>
+                <tr><td>Distance Covered</td><td>${Math.floor(Math.random() * 500) + 100} km</td></tr>
+                <tr><td>Last Update</td><td>${new Date().toLocaleTimeString()}</td></tr>
+            </table>`;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('empty');
+        }
+
+        function checkOfflineStatus() {
+            const trainNo = document.getElementById('offline-train-no').value;
+            const lastStation = document.getElementById('last-station').value;
+            const resultDiv = document.getElementById('offline-result');
+            
+            const trainName = trainNames[Math.floor(Math.random() * trainNames.length)];
+            const isAhead = Math.random() > 0.5;
+            const timeDiff = Math.floor(Math.random() * 30) + 5;
+            const hoursToNext = Math.floor(Math.random() * 5) + 1;
+            
+            const html = `<h3>📶 Offline Status for Train ${trainNo}</h3>
+                <p style="font-size: 1.1rem; margin: 15px 0;"><strong>Train Name:</strong> ${trainName}</p>
+                <p><strong>Last Known Station:</strong> ${lastStation}</p>
+                <span class="status-badge ${isAhead ? 'status-ontime' : 'status-late'}">
+                    ${isAhead ? '✅' : '⚠️'} ${timeDiff} minutes ${isAhead ? 'AHEAD' : 'BEHIND'} schedule
+                </span>
+                <p style="margin-top: 20px; font-size: 1.05rem;"><strong>Estimated arrival at next station:</strong> ${hoursToNext} hours from last update</p>
+                <p style="margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 10px; color: #92400e;">
+                    ⚠️ <strong>Note:</strong> This is cached data. Connect to internet for live updates.
+                </p>`;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('empty');
+        }
+        function checkPnrStatus() {
+            const pnrNumber = document.getElementById('pnr-number').value;
+            const resultDiv = document.getElementById('pnr-result');
+            
+            const isConfirmed = Math.random() > 0.4;
+            const trainName = trainNames[Math.floor(Math.random() * trainNames.length)];
+            const trainNo = Math.floor(Math.random() * 90000) + 10000;
+            const fromStation = stations[Math.floor(Math.random() * stations.length)];
+            const toStation = stations[Math.floor(Math.random() * stations.length)];
+            const date = new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000);
+            const dateStr = date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            
+            let html = `<h3>🎫 PNR Status: ${pnrNumber}</h3>
+                <table class="data-table">
+                    <tr><th>Field</th><th>Details</th></tr>
+                    <tr><td>PNR Number</td><td><strong>${pnrNumber}</strong></td></tr>
+                    <tr><td>Train Number</td><td>${trainNo}</td></tr>
+                    <tr><td>Train Name</td><td>${trainName}</td></tr>
+                    <tr><td>From</td><td>${fromStation}</td></tr>
+                    <tr><td>To</td><td>${toStation}</td></tr>
+                    <tr><td>Date of Journey</td><td>${dateStr}</td></tr>`;
+            
+            if (isConfirmed) {
+                const coaches = ['A1', 'A2', 'B1', 'B2', 'B3', 'S1', 'S2', 'S3'];
+                const coach = coaches[Math.floor(Math.random() * coaches.length)];
+                const seat = Math.floor(Math.random() * 72) + 1;
+                html += `<tr><td>Status</td><td><span class="status-badge status-confirmed">✅ CONFIRMED</span></td></tr>
+                    <tr><td>Coach</td><td><strong>${coach}</strong></td></tr>
+                    <tr><td>Seat Number</td><td><strong>${seat}</strong></td></tr>`;
+            } else {
+                const waitlistNo = Math.floor(Math.random() * 50) + 1;
+                html += `<tr><td>Status</td><td><span class="status-badge status-waitlist">⏳ WAITLIST</span></td></tr>
+                    <tr><td>Current Position</td><td><strong>WL ${waitlistNo}</strong></td></tr>
+                    <tr><td>Chances</td><td>${waitlistNo < 20 ? 'High' : waitlistNo < 35 ? 'Medium' : 'Low'}</td></tr>`;
+            }
+            
+            html += `</table>`;
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('empty');
+        }
+
+        function viewSchedule() {
+            const trainNo = document.getElementById('schedule-train-no').value;
+            const resultDiv = document.getElementById('schedule-result');
+            
+            const trainName = trainNames[Math.floor(Math.random() * trainNames.length)];
+            let html = `<h3>⏰ Schedule for Train ${trainNo} - ${trainName}</h3>
+                <table class="data-table">
+                    <thead><tr><th>Station</th><th>Arrival</th><th>Departure</th><th>Distance (km)</th><th>Platform</th></tr></thead>
+                    <tbody>`;
+            
+            let time = 6 * 60;
+            let distance = 0;
+            
+            for (let i = 0; i < 8; i++) {
+                const station = stations[i % stations.length];
+                const arrival = i === 0 ? '--' : `${Math.floor(time / 60).toString().padStart(2, '0')}:${(time % 60).toString().padStart(2, '0')}`;
+                time += Math.floor(Math.random() * 30) + 5;
+                const departure = i === 7 ? '--' : `${Math.floor(time / 60).toString().padStart(2, '0')}:${(time % 60).toString().padStart(2, '0')}`;
+                time += Math.floor(Math.random() * 120) + 30;
+                const platform = Math.floor(Math.random() * 10) + 1;
+                
+                html += `<tr><td><strong>${station}</strong></td><td>${arrival}</td><td>${departure}</td><td>${distance}</td><td>${platform}</td></tr>`;
+                distance += Math.floor(Math.random() * 150) + 50;
+            }
+            
+            html += `</tbody></table>`;
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('empty');
+        }
+
+        function viewRoute() {
+            const trainNo = document.getElementById('route-train-no').value;
+            const resultDiv = document.getElementById('route-result');
+            
+            const trainName = trainNames[Math.floor(Math.random() * trainNames.length)];
+            let html = `<h3>🗺️ Route for Train ${trainNo} - ${trainName}</h3><ul class="station-list">`;
+            
+            for (let i = 0; i < 10; i++) {
+                const station = stations[i % stations.length];
+                const code = stationCodes[i % stationCodes.length];
+                html += `<li><strong>${station}</strong> (${code})</li>`;
+            }
+            
+            html += `</ul>`;
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('empty');
+        }
+
+        function getStationInfo() {
+            const stationCode = document.getElementById('station-code').value.toUpperCase();
+            const resultDiv = document.getElementById('station-result');
+            
+            const stationName = stations[Math.floor(Math.random() * stations.length)];
+            let html = `<h3>🚉 Trains at ${stationName} (${stationCode})</h3>
+                <table class="data-table">
+                    <thead><tr><th>Train No.</th><th>Train Name</th><th>Arrival</th><th>Departure</th><th>Platform</th></tr></thead>
+                    <tbody>`;
+            
+            for (let i = 0; i < 5; i++) {
+                const trainNo = Math.floor(Math.random() * 90000) + 10000;
+                const trainName = trainNames[Math.floor(Math.random() * trainNames.length)];
+                const hour = Math.floor(Math.random() * 24);
+                const minute = Math.floor(Math.random() * 60);
+                const arrival = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                const depMinute = (minute + Math.floor(Math.random() * 20) + 5) % 60;
+                const depHour = depMinute < minute ? hour + 1 : hour;
+                const departure = `${depHour.toString().padStart(2, '0')}:${depMinute.toString().padStart(2, '0')}`;
+                const platform = Math.floor(Math.random() * 10) + 1;
+                
+                html += `<tr><td><strong>${trainNo}</strong></td><td>${trainName}</td><td>${arrival}</td><td>${departure}</td><td>${platform}</td></tr>`;
+            }
+            
+            html += `</tbody></table>`;
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('empty');
+        }
+    </script>
+</body>
+</html>
